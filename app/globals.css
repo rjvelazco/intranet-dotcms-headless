@@ -1,5 +1,17 @@
 @import "tailwindcss";
 
+/* Brand tokens sampled from the dotCMS intranet screenshot. */
+@theme {
+  --color-brand-navy: #08354d;
+  --color-brand-line: #1d485d;
+  --color-brand-magenta: #c336e5;
+  --color-brand-blue: #0868cd;
+  --color-brand-blue-muted: #86c6fa;
+  --color-brand-canvas: #fafbfd;
+  --color-brand-border: #c9cacc;
+  --color-brand-pill: #f1f1f1;
+}
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
@@ -10,13 +22,6 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {

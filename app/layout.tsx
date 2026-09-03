@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { SideNav } from "@/components/layout/SideNav";
+import { TopNav } from "@/components/layout/TopNav";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -23,7 +25,15 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full">
+        <div className="flex min-h-screen">
+          <SideNav />
+          <div className="flex min-w-0 flex-1 flex-col">
+            <TopNav />
+            <main className="flex-1 bg-brand-canvas p-12">{children}</main>
+          </div>
+        </div>
+      </body>
     </html>
   );
 }
