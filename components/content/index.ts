@@ -1,4 +1,5 @@
 import type { DotCMSBasicContentlet } from "@dotcms/types";
+import { VtlWidget } from "./VtlWidget/VtlWidget";
 
 /** Reserved key for the fallback used when a content type has no component. */
 export const CUSTOM_NO_COMPONENT = "CustomNoComponent";
@@ -6,8 +7,9 @@ export const CUSTOM_NO_COMPONENT = "CustomNoComponent";
 /**
  * Content type components live in this folder and get registered here.
  *
- * Keys are dotCMS **content type variable names** (`Banner`, `Product`,
- * `Activity`, ...). The matching contentlet's fields are passed in as props:
+ * Keys are dotCMS **content type variable names** (`Banner`, `Product`, ...)
+ * and are case sensitive. The matching contentlet's fields are passed in as
+ * props:
  *
  *   // components/content/Banner.tsx
  *   export function Banner({ title }: DotCMSBasicContentlet) { ... }
@@ -24,6 +26,8 @@ export const contentComponents: Record<
   string,
   React.ComponentType<DotCMSBasicContentlet>
 > = {
-  // Banner,
-  // [CUSTOM_NO_COMPONENT]: Fallback,
+  // VTL widgets dispatch internally on their `vtlType` field.
+  // The key is the content type's variable name, verified against the live
+  // page payload — note the lowercase "w". Rename this if the type is renamed.
+  Vtlwidget: VtlWidget,
 };
