@@ -1,36 +1,37 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# intranet-dotcms-headless
 
-## Getting Started
+Minimal headless dotCMS front end on Next.js 16 (App Router).
 
-First, run the development server:
+## Setup
 
 ```bash
+cp .env.local.example .env.local   # then fill in DOTCMS_AUTH_TOKEN
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Get a token from the dotCMS UI: **My Account → API Access Token**.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## What's wired
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Path | Role |
+| --- | --- |
+| `lib/dotcms.ts` | `createDotCMSClient` instance + `getPage()` (maps `NOT_FOUND` to the 404 page) |
+| `app/page.tsx` | Server component; fetches the `/index` page asset |
+| `components/DotCMSPage.tsx` | Client wrapper: `useEditableDotCMSPage` (UVE) + `DotCMSLayoutBody` |
+| `components/content/index.ts` | **Content type component registry — add your components here** |
+| `app/not-found.tsx` | 404 page |
 
-## Learn More
+## Adding a content type component
 
-To learn more about Next.js, take a look at the following resources:
+Nothing is registered yet, so in dev every contentlet renders `No Component for <Type>`.
+That tells you exactly what to build.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Create `components/content/Banner.tsx` — contentlet fields arrive as props.
+2. Register it in `components/content/index.ts`.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Keys are dotCMS **content type variable names**.
 
-## Deploy on Vercel
+## Next steps
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **All routes, not just `/index`** — move `app/page.tsx` to `app/[[...slug]]/page.tsx` and pass the joined slug to `getPage()`.
+- **Faster payloads** — the SDK logs a warning because no GraphQL query is supplied, so it falls back to `_map` and returns every field. Pass `graphql: { page, content, fragments }` to `client.page.get` to request only what you render.
