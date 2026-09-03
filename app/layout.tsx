@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { SideNav } from "@/components/layout/SideNav";
+import { getNav } from "@/lib/dotcms";
 import { TopNav } from "@/components/layout/TopNav";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
@@ -19,7 +20,9 @@ export const metadata: Metadata = {
   description: "Next.js front end for a headless dotCMS instance",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const navItems = await getNav();
+
   return (
     <html
       lang="en"
@@ -27,9 +30,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full">
         <div className="flex min-h-screen">
-          <SideNav />
+          <SideNav items={navItems} />
           <div className="flex min-w-0 flex-1 flex-col">
-            <TopNav />
+            <TopNav items={navItems} />
             <main className="flex-1 bg-brand-canvas p-12">{children}</main>
           </div>
         </div>

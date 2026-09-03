@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { navItems } from "./nav-items";
+import type { NavItem } from "@/lib/dotcms";
 
 /** Wordmark placeholder: the "o" is the dotCMS magenta dot. */
 function Wordmark() {
@@ -14,7 +14,7 @@ function Wordmark() {
   );
 }
 
-export function SideNav() {
+export function SideNav({ items }: { items: NavItem[] }) {
   const pathname = usePathname();
 
   return (
@@ -24,19 +24,20 @@ export function SideNav() {
       </Link>
 
       <nav className="flex flex-col">
-        {navItems.map((item) => {
+        {items.map((item) => {
           const isActive = pathname === item.href;
 
           return (
             <Link
-              key={item.href}
+              key={item.dotcmsHref}
               href={item.href}
+              target={item.target === "_blank" ? "_blank" : undefined}
               aria-current={isActive ? "page" : undefined}
               className={`mx-4 border-b border-brand-line px-4 py-2.5 text-[17px] transition-colors ${
                 isActive ? "text-white" : "text-white/90 hover:text-white"
               }`}
             >
-              {item.label}
+              {item.title}
             </Link>
           );
         })}

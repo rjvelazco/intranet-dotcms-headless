@@ -9,8 +9,10 @@ function required(name: string): string {
   return value;
 }
 
+const dotcmsUrl = required("DOTCMS_HOST").replace(/\/+$/, "");
+
 export const client = createDotCMSClient({
-  dotcmsUrl: required("DOTCMS_HOST"),
+  dotcmsUrl,
   authToken: required("DOTCMS_AUTH_TOKEN"),
   siteId: process.env.DOTCMS_SITE_ID,
   logLevel: process.env.NODE_ENV === "development" ? "verbose" : "default",
@@ -37,5 +39,90 @@ export async function getPage(url: string) {
     if (isNotFound(error)) notFound();
 
     throw error;
+  }
+}
+
+/** The dotCMS folder the site navigation is built from. */
+export const NAV_ROOT = "/support";
+
+export type NavItem = {
+  title: string;
+  /** Route in this app, with NAV_ROOT stripped off. */
+  href: string;
+  /** dotCMS href, e.g. "/support/cloud". */
+  dotcmsHref: string;
+  type: string;
+  target: string;
+};
+
+type DotCMSNavResponse = {
+  entity?: {
+    children?: {
+      title: string;
+      href: string;
+      type: string;
+      target: string;
+    }[];
+  };
+};
+
+/** Maps a dotCMS nav href onto a route in this app. */
+function toRoute(dotcmsHref: string): string {
+  const stripped = dotcmsHref.startsWith(NAV_ROOT)
+    ? dotcmsHref.slice(NAV_ROOT.length)
+    : dotcmsHref;
+
+  return stripped.replace(/\/index$/, "") || "/";
+}
+
+/**
+ * Fetches the navigation tree under `path`.
+ *
+ * This calls the REST endpoint rather than `client.nav.get()`, which can't be
+ * used here for two reasons: it takes no site parameter, so it resolves
+ * against the instance's default site instead of DOTCMS_SITE_ID, and its
+ * declared `DotCMSNavigationItem[]` return type is really a single root node
+ * with a `children` array.
+ *
+ * Returns [] on failure so a nav outage degrades the chrome instead of
+ * taking down every page.
+ */
+export async function getNav(
+  path: string = NAV_ROOT,
+  depth = 2,
+): Promise<NavItem[]> {
+  const params = new URLSearchParams({ depth: String(depth) });
+  const siteId = process.env.DOTCMS_SITE_ID;
+  if (siteId) {
+    params.set("host_id", siteId);
+  }
+
+  const url = `${dotcmsUrl}/api/v1/nav/${path.replace(/^\/+/, "")}?${params}`;
+
+  try {
+    const response = await fetch(url, {
+      headers: { Authorization: `Bearer ${required("DOTCMS_AUTH_TOKEN")}` },
+      next: { revalidate: 300, tags: ["dotcms-nav"] },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status} ${response.statusText}`);
+    }
+
+    const { entity }: DotCMSNavResponse = await response.json();
+
+    // dotCMS already returns these in display order, and `order` repeats
+    // across siblings, so don't re-sort.
+    return (entity?.children ?? []).map((child) => ({
+      title: child.title,
+      href: toRoute(child.href),
+      dotcmsHref: child.href,
+      type: child.type,
+      target: child.target,
+    }));
+  } catch (error) {
+    console.warn(`[dotcms] navigation fetch failed for "${path}":`, error);
+
+    return [];
   }
 }
