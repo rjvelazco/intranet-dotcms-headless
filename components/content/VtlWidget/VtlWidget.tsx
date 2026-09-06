@@ -3,19 +3,19 @@ import { vtlComponents } from "./vtl-components";
 import { VtlWidgetPending } from "./VtlWidgetPending";
 
 /**
- * Renders a VTL widget by dispatching on its `vtlType` field.
+ * Renders a VTL widget by dispatching on its `widgetType` field.
  *
- * This is a component map, not a renderer: it looks `vtlType` up in
+ * This is a component map, not a renderer: it looks `widgetType` up in
  * `vtlComponents` and delegates. Unmapped or missing types fall through to
  * VtlWidgetPending so the page shows what still needs building.
  */
 export function VtlWidget(contentlet: VtlWidgetContentlet) {
-  const vtlType = contentlet.vtlType?.trim() || undefined;
-  const Component = vtlType ? vtlComponents[vtlType] : undefined;
+  const widgetType = contentlet.widgetType?.trim() || undefined;
+  const Component = widgetType ? vtlComponents[widgetType] : undefined;
 
   if (Component) {
     return <Component {...contentlet} />;
   }
 
-  return <VtlWidgetPending contentlet={contentlet} vtlType={vtlType} />;
+  return <VtlWidgetPending contentlet={contentlet} widgetType={widgetType} />;
 }
