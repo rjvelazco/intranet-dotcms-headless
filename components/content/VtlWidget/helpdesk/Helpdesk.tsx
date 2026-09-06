@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import type { HelpdeskBoard } from "@/lib/freshdesk.types";
 import { TicketBoard } from "./TicketBoard";
 import type { VtlWidgetContentlet } from "../types";
+import { useHelpdeskBoard } from "../useHelpdeskBoard";
 
 /**
  * Helpdesk dashboard widget (`widgetType: "helpdesk"`).
@@ -14,37 +13,12 @@ import type { VtlWidgetContentlet } from "../types";
  *
  * This is a client component because the registry it's mapped in is imported
  * by `DotCMSPage`, which is one itself. So the data comes over the wire from
- * `/api/helpdesk`, keeping the Freshdesk credentials on the server — see
- * `lib/freshdesk.ts`, which ports what `detect-agent.vtl` did in the shared
- * Velocity context.
+ * `/api/helpdesk` via `useHelpdeskBoard`, keeping the Freshdesk credentials on
+ * the server — see `lib/freshdesk.ts`, which ports what `detect-agent.vtl` did
+ * in the shared Velocity context.
  */
 export function Helpdesk({ widgetTitle }: VtlWidgetContentlet) {
-  const [board, setBoard] = useState<HelpdeskBoard>();
-  const [error, setError] = useState<string>();
-
-  useEffect(() => {
-    const controller = new AbortController();
-
-    fetch("/api/helpdesk", { signal: controller.signal })
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status} ${response.statusText}`);
-        }
-
-        return response.json() as Promise<HelpdeskBoard>;
-      })
-      .then(setBoard)
-      .catch((cause: unknown) => {
-        if (controller.signal.aborted) return;
-
-        console.warn("[helpdesk] board fetch failed:", cause);
-        setError("Couldn't load the ticket board.");
-      });
-
-    return () => {
-      controller.abort();
-    };
-  }, []);
+  const { board, error } = useHelpdeskBoard();
 
   const name = [board?.agent?.firstName, board?.agent?.lastName]
     .filter(Boolean)

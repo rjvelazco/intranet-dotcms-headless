@@ -1,4 +1,5 @@
 import { Helpdesk } from "./helpdesk";
+import { PriorityTickets } from "./new-tickets";
 import type { VtlComponent } from "./types";
 
 /**
@@ -20,4 +21,5 @@ import type { VtlComponent } from "./types";
  */
 export const vtlComponents: Record<string, VtlComponent> = {
   helpdesk: Helpdesk,
+  "new-tickets": PriorityTickets,
 };
