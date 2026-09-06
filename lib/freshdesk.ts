@@ -22,7 +22,8 @@
  */
 import "server-only";
 
-import { client } from "./dotcms";
+import { getClient } from "./dotcms";
+import { optionalEnv } from "./env";
 import type { Agent, HelpdeskBoard, Ticket } from "./freshdesk.types";
 
 export type { Agent, HelpdeskBoard, Ticket } from "./freshdesk.types";
@@ -65,9 +66,21 @@ type TicketDetail = {
   custom_fields?: Record<string, unknown>;
 };
 
+/**
+ * Freshdesk credentials, or undefined when they aren't configured.
+ *
+ * None of these are critical: the board is one widget, so a missing variable
+ * warns and the widget shows a notice. The rest of the app is unaffected.
+ */
 function config() {
-  const apiKey = process.env.FRESHDESK_API_KEY;
-  const domain = (process.env.FRESHDESK_DOMAIN ?? "").replace(/^https?:\/\//, "");
+  const apiKey = optionalEnv(
+    "FRESHDESK_API_KEY",
+    "the helpdesk widget will show a notice instead of the ticket board.",
+  );
+  const domain = optionalEnv(
+    "FRESHDESK_DOMAIN",
+    "the helpdesk widget has no Freshdesk account to read from.",
+  )?.replace(/^https?:\/\//, "");
 
   if (!apiKey || !domain) return undefined;
 
@@ -112,11 +125,19 @@ async function api<T>(
 async function resolveAgent(
   cfg: NonNullable<ReturnType<typeof config>>,
 ): Promise<Agent | undefined> {
+  // Only one of these is needed, so neither warns on its own; the caller
+  // reports it if both are missing.
   const explicitId = process.env.FRESHDESK_AGENT_ID?.trim();
   const email = process.env.FRESHDESK_AGENT_EMAIL?.trim();
 
   if (explicitId) return { id: explicitId, email };
-  if (!email) return undefined;
+  if (!email) {
+    console.warn(
+      "[env] Neither FRESHDESK_AGENT_ID nor FRESHDESK_AGENT_EMAIL is set — the helpdesk widget doesn't know whose tickets to show.",
+    );
+
+    return undefined;
+  }
 
   const staff = await staffByEmail(email);
   if (staff?.id) return staff;
@@ -142,7 +163,7 @@ async function staffByEmail(email: string): Promise<Agent | undefined> {
   };
 
   try {
-    const { contentlets } = await client.content
+    const { contentlets } = await getClient().content
       .getCollection<Staff>("Staff")
       .query((qb) => qb.field("email").equals(email))
       .sortBy([{ field: "modDate", order: "desc" }])

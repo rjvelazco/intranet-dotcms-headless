@@ -17,6 +17,7 @@ instance is rejected by another with `401 Invalid User`.
 
 | Path | Role |
 | --- | --- |
+| `lib/env.ts` | `optionalEnv()` (warns) and `requiredEnv()` (throws) |
 | `lib/dotcms.ts` | Client instance, `getPage()` (maps `NOT_FOUND` to the 404 page), `getNav()` |
 | `lib/freshdesk.ts` | Freshdesk data layer for the helpdesk widget |
 | `app/layout.tsx` | Fetches the nav, composes side nav + top nav + content area |
@@ -131,6 +132,11 @@ This app has no dotCMS session, so the agent comes from the environment:
   for its `freshdeskAgentId`, then in Freshdesk's `/agents?email=`.
 
 Replace `resolveAgent()` in `lib/freshdesk.ts` once the app has real auth.
+
+Every `FRESHDESK_*` variable is optional. Missing one logs a `[env]` warning
+naming the variable and the consequence, the widget renders a notice, and the
+rest of the app is unaffected. Only `DOTCMS_HOST` and `DOTCMS_AUTH_TOKEN` are
+critical enough to throw.
 
 `FRESHDESK_API_KEY` is a secret and lives only in `.env.local` (gitignored).
 dotCMS keeps the same key on the site as `host.freshdeskApiKey`, base64'd as

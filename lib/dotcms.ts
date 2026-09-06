@@ -1,22 +1,29 @@
 import { notFound } from "next/navigation";
 import { createDotCMSClient } from "@dotcms/client";
+import { requiredEnv } from "./env";
 
-function required(name: string): string {
-  const value = process.env[name];
-  if (!value) {
-    throw new Error(`Missing ${name}. Copy .env.local.example to .env.local.`);
-  }
-  return value;
+/**
+ * DOTCMS_HOST and DOTCMS_AUTH_TOKEN are the app's critical variables: without
+ * them there is no content to render, so they throw rather than warn. The
+ * client is built on first use, not at module scope, so that failure lands on
+ * the request that needed it instead of every route importing this file.
+ */
+let cached: ReturnType<typeof createDotCMSClient> | undefined;
+
+function dotcmsHost(): string {
+  return requiredEnv("DOTCMS_HOST").replace(/\/+$/, "");
 }
 
-const dotcmsUrl = required("DOTCMS_HOST").replace(/\/+$/, "");
+export function getClient() {
+  cached ??= createDotCMSClient({
+    dotcmsUrl: dotcmsHost(),
+    authToken: requiredEnv("DOTCMS_AUTH_TOKEN"),
+    siteId: process.env.DOTCMS_SITE_ID,
+    logLevel: process.env.NODE_ENV === "development" ? "verbose" : "default",
+  });
 
-export const client = createDotCMSClient({
-  dotcmsUrl,
-  authToken: required("DOTCMS_AUTH_TOKEN"),
-  siteId: process.env.DOTCMS_SITE_ID,
-  logLevel: process.env.NODE_ENV === "development" ? "verbose" : "default",
-});
+  return cached;
+}
 
 /**
  * `client.page.get` throws a `DotErrorPage`, which isn't exported at runtime,
@@ -34,7 +41,7 @@ function isNotFound(error: unknown): boolean {
 /** Fetches a dotCMS page, rendering app/not-found.tsx when it doesn't exist. */
 export async function getPage(url: string) {
   try {
-    return await client.page.get(url, { languageId: "1" });
+    return await getClient().page.get(url, { languageId: "1" });
   } catch (error) {
     if (isNotFound(error)) notFound();
 
@@ -108,11 +115,11 @@ export async function getNav(
     params.set("host_id", siteId);
   }
 
-  const url = `${dotcmsUrl}/api/v1/nav/${path.replace(/^\/+/, "")}?${params}`;
+  const url = `${dotcmsHost()}/api/v1/nav/${path.replace(/^\/+/, "")}?${params}`;
 
   try {
     const response = await fetch(url, {
-      headers: { Authorization: `Bearer ${required("DOTCMS_AUTH_TOKEN")}` },
+      headers: { Authorization: `Bearer ${requiredEnv("DOTCMS_AUTH_TOKEN")}` },
       next: { revalidate: 300, tags: ["dotcms-nav"] },
     });
 
