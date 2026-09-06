@@ -76,6 +76,17 @@ function toRoute(dotcmsHref: string): string {
 }
 
 /**
+ * The inverse of `toRoute`: turns the catch-all route's slug segments back
+ * into the dotCMS page path. `/` is the section index, so it maps to
+ * `${NAV_ROOT}/index` rather than the bare folder.
+ */
+export function toDotCMSPath(slug: string[] | undefined): string {
+  const path = (slug ?? []).join("/");
+
+  return path ? `${NAV_ROOT}/${path}` : `${NAV_ROOT}/index`;
+}
+
+/**
  * Fetches the navigation tree under `path`.
  *
  * This calls the REST endpoint rather than `client.nav.get()`, which can't be

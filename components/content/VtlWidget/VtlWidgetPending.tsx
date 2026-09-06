@@ -27,15 +27,15 @@ function Field({ label, value }: { label: string; value: string }) {
 }
 
 /**
- * Shown when a VTL widget has no component mapped for its `vtlType`,
- * or has no `vtlType` at all.
+ * Shown when a VTL widget has no component mapped for its `widgetType`,
+ * or has no `widgetType` at all.
  */
 export function VtlWidgetPending({
   contentlet,
-  vtlType,
+  widgetType,
 }: {
   contentlet: VtlWidgetContentlet;
-  vtlType?: string;
+  widgetType?: string;
 }) {
   return (
     <div className="rounded-xl border border-dashed border-slate-300 bg-white p-5 shadow-sm">
@@ -54,11 +54,11 @@ export function VtlWidgetPending({
             </span>
           </div>
 
-          {vtlType ? (
+          {widgetType ? (
             <p className="mt-1.5 text-sm text-slate-500">
               No component is mapped for{" "}
               <code className="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-[13px] text-slate-700">
-                {vtlType}
+                {widgetType}
               </code>{" "}
               yet.
             </p>
@@ -66,7 +66,7 @@ export function VtlWidgetPending({
             <p className="mt-1.5 text-sm text-slate-500">
               This widget has no{" "}
               <code className="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-[13px] text-slate-700">
-                vtlType
+                widgetType
               </code>{" "}
               set, so there is nothing to look up.
             </p>
