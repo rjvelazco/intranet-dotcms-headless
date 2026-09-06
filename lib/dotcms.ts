@@ -90,7 +90,7 @@ function toRoute(dotcmsHref: string): string {
 export function toDotCMSPath(slug: string[] | undefined): string {
   const path = (slug ?? []).join("/");
 
-  return path ? `${NAV_ROOT}/${path}` : `${NAV_ROOT}/index`;
+  return path ? `/${path}` : `${NAV_ROOT}/index`;
 }
 
 /**
